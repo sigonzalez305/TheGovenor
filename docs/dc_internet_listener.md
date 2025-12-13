@@ -59,6 +59,8 @@ A ward-level awareness system for Washington, DC that aggregates online and offi
 - `/search`: Global search across signals/events/sources.
 - Shared layout: App shell with top nav, global filter bar (time window, categories, source types, topics, geocoded-only, hide duplicates), toast center, optional context drawer.
 
+For a concrete web implementation plan (stack, project layout, API contracts, and deployment/testing steps), see `docs/web_app_build_guide.md`.
+
 ## Classification Rules (Initial Deterministic Set)
 - **Red**: crime/violence, urgent danger, credible threats.
 - **Yellow**: alerts, service disruptions, transit delays, weather cautions.
