@@ -1,0 +1,31 @@
+{
+  "name": "@dc-listener/api",
+  "version": "1.0.0",
+  "main": "dist/index.js",
+  "scripts": {
+    "dev": "tsx watch src/index.ts",
+    "build": "tsc",
+    "start": "node dist/index.js",
+    "migrate": "node -r tsx/cjs db/migrate.js",
+    "seed": "node -r tsx/cjs db/seed.js",
+    "lint": "eslint src"
+  },
+  "dependencies": {
+    "@dc-listener/shared": "workspace:*",
+    "@fastify/cors": "^8.5.0",
+    "@fastify/env": "^4.3.0",
+    "@fastify/postgres": "^5.2.2",
+    "bullmq": "^5.1.0",
+    "dotenv": "^16.3.1",
+    "fastify": "^4.25.1",
+    "ioredis": "^5.3.2",
+    "pg": "^8.11.3",
+    "zod": "^3.22.4"
+  },
+  "devDependencies": {
+    "@types/node": "^20.10.0",
+    "@types/pg": "^8.10.9",
+    "tsx": "^4.7.0",
+    "typescript": "^5.3.2"
+  }
+}
