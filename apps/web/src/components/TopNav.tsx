@@ -9,7 +9,10 @@ export function TopNav() {
             </a>
             <div className="hidden md:flex space-x-4">
               <a href="/" className="hover:text-gray-300">
-                Map
+                Overview
+              </a>
+              <a href="/dashboard" className="hover:text-gray-300">
+                Dashboard
               </a>
               <a href="/daily" className="hover:text-gray-300">
                 Daily
