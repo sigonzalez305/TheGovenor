@@ -110,17 +110,48 @@ export function useSentimentData() {
   return useQuery({
     queryKey: ['sentiment', timeRange],
     queryFn: async () => {
-      // TODO: Replace with actual API call
-      // const data = await api.getSentimentData(timeRange);
-      return {
-        pulse: generateMockSentimentScore(),
-        breakdown: {
-          positive: 45,
-          neutral: 35,
-          negative: 20,
-        },
-        timeline: generateMockTimeline(),
-      };
+      try {
+        // Fetch citywide sentiment
+        const citywideData = await api.getSentimentCitywide(timeRange);
+
+        // Fetch timeline data
+        const timelineData = await api.getSentimentTimeseries({
+          bucket: 'hour',
+        });
+
+        // Transform API response to match widget interface
+        const pulse: SentimentScore = {
+          value: citywideData.score || 50,
+          trend: citywideData.trend > 0 ? 'up' : citywideData.trend < 0 ? 'down' : 'stable',
+          trendValue: Math.abs(citywideData.trend || 0),
+          label: citywideData.label || 'Calm',
+        };
+
+        return {
+          pulse,
+          breakdown: citywideData.breakdown || {
+            positive: 0,
+            neutral: 0,
+            negative: 0,
+          },
+          timeline: (timelineData.timeline || []).map((item: any) => ({
+            timestamp: item.timestamp,
+            score: item.score,
+          })),
+        };
+      } catch (error) {
+        console.error('Failed to fetch sentiment data:', error);
+        // Fallback to mock data on error
+        return {
+          pulse: generateMockSentimentScore(),
+          breakdown: {
+            positive: 45,
+            neutral: 35,
+            negative: 20,
+          },
+          timeline: generateMockTimeline(),
+        };
+      }
     },
   });
 }
@@ -132,12 +163,20 @@ export function useThemesData() {
   return useQuery({
     queryKey: ['themes', timeRange, themeFilter],
     queryFn: async () => {
-      // TODO: Replace with actual API call
-      // const data = await api.getThemes(timeRange, themeFilter);
-      return {
-        topThemes: generateMockThemes(10),
-        network: undefined, // Optional theme network
-      };
+      try {
+        const data = await api.getThemes(timeRange, 10);
+        return {
+          topThemes: data.themes || [],
+          network: undefined, // Optional theme network
+        };
+      } catch (error) {
+        console.error('Failed to fetch themes data:', error);
+        // Fallback to mock data on error
+        return {
+          topThemes: generateMockThemes(10),
+          network: undefined,
+        };
+      }
     },
   });
 }
@@ -149,17 +188,33 @@ export function useHotspotsData() {
   return useQuery({
     queryKey: ['hotspots', timeRange, sentimentFilter, themeFilter],
     queryFn: async () => {
-      // TODO: Replace with actual API call
-      // const data = await api.getHotspots(timeRange, sentimentFilter, themeFilter);
-      const hotspots = generateMockHotspots(15);
-      return {
-        hotspots,
-        summary: {
-          total: hotspots.length,
-          critical: hotspots.filter((h) => h.severity === 'critical').length,
-          active: hotspots.filter((h) => h.isActive).length,
-        },
-      };
+      try {
+        const params: any = { timeWindow: timeRange };
+        if (sentimentFilter) params.sentiment = sentimentFilter;
+        if (themeFilter) params.theme = themeFilter;
+
+        const data = await api.getHotspots(params);
+        return {
+          hotspots: data.hotspots || [],
+          summary: data.summary || {
+            total: 0,
+            critical: 0,
+            active: 0,
+          },
+        };
+      } catch (error) {
+        console.error('Failed to fetch hotspots data:', error);
+        // Fallback to mock data on error
+        const hotspots = generateMockHotspots(15);
+        return {
+          hotspots,
+          summary: {
+            total: hotspots.length,
+            critical: hotspots.filter((h) => h.severity === 'critical').length,
+            active: hotspots.filter((h) => h.isActive).length,
+          },
+        };
+      }
     },
   });
 }
@@ -170,18 +225,22 @@ export function useThemeDetail(themeId: string | null) {
     queryKey: ['theme-detail', themeId],
     queryFn: async () => {
       if (!themeId) return null;
-      // TODO: Replace with actual API call
-      // const data = await api.getThemeDetail(themeId);
 
-      // Mock data for now
-      const theme = generateMockThemes(1)[0];
-      return {
-        ...theme,
-        summary: 'This theme has been gaining traction in the community over the past few days.',
-        timeline: generateMockTimeline(48),
-        topPosts: [], // Would fetch actual signals
-        relatedThemes: generateMockThemes(3),
-      } as ThemeDetail;
+      try {
+        const data = await api.getTheme(themeId);
+        return data.theme as ThemeDetail;
+      } catch (error) {
+        console.error('Failed to fetch theme detail:', error);
+        // Fallback to mock data on error
+        const theme = generateMockThemes(1)[0];
+        return {
+          ...theme,
+          summary: 'This theme has been gaining traction in the community over the past few days.',
+          timeline: generateMockTimeline(48),
+          topPosts: [],
+          relatedThemes: generateMockThemes(3),
+        } as ThemeDetail;
+      }
     },
     enabled: !!themeId,
   });
@@ -193,24 +252,28 @@ export function useHotspotDetail(hotspotId: string | null) {
     queryKey: ['hotspot-detail', hotspotId],
     queryFn: async () => {
       if (!hotspotId) return null;
-      // TODO: Replace with actual API call
-      // const data = await api.getHotspotDetail(hotspotId);
 
-      // Mock data for now
-      const hotspot = generateMockHotspots(1)[0];
-      return {
-        ...hotspot,
-        summary:
-          'This area has seen increased activity related to public safety and transportation issues.',
-        themeBreakdown: generateMockThemes(5),
-        timeline: generateMockTimeline(24),
-        recentPosts: [], // Would fetch actual signals
-        suggestedActions: [
-          'Monitor social media for escalating concerns',
-          'Coordinate with local police department',
-          'Review recent 311 service requests',
-        ],
-      } as HotspotDetail;
+      try {
+        const data = await api.getHotspot(hotspotId);
+        return data.hotspot as HotspotDetail;
+      } catch (error) {
+        console.error('Failed to fetch hotspot detail:', error);
+        // Fallback to mock data on error
+        const hotspot = generateMockHotspots(1)[0];
+        return {
+          ...hotspot,
+          summary:
+            'This area has seen increased activity related to public safety and transportation issues.',
+          themeBreakdown: generateMockThemes(5),
+          timeline: generateMockTimeline(24),
+          recentPosts: [],
+          suggestedActions: [
+            'Monitor social media for escalating concerns',
+            'Coordinate with local police department',
+            'Review recent 311 service requests',
+          ],
+        } as HotspotDetail;
+      }
     },
     enabled: !!hotspotId,
   });

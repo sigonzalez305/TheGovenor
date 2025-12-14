@@ -10,6 +10,9 @@ import { eventsRoutes } from './routes/events';
 import { sourcesRoutes } from './routes/sources';
 import { dailyRoutes } from './routes/daily';
 import { searchRoutes } from './routes/search';
+import { sentimentRoutes } from './routes/sentiment';
+import { themesRoutes } from './routes/themes';
+import { hotspotsRoutes } from './routes/hotspots';
 
 const fastify = Fastify({
   logger: {
@@ -50,6 +53,9 @@ fastify.register(eventsRoutes, { prefix: '/api' });
 fastify.register(sourcesRoutes, { prefix: '/api' });
 fastify.register(dailyRoutes, { prefix: '/api' });
 fastify.register(searchRoutes, { prefix: '/api' });
+fastify.register(sentimentRoutes, { prefix: '/api' });
+fastify.register(themesRoutes, { prefix: '/api' });
+fastify.register(hotspotsRoutes, { prefix: '/api' });
 
 // Error handler
 fastify.setErrorHandler((error, request, reply) => {
