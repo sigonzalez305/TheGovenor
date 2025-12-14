@@ -1,0 +1,217 @@
+import { useQuery } from '@tanstack/react-query';
+import { api } from '@/lib/api';
+import {
+  SentimentScore,
+  Theme,
+  Hotspot,
+  SentimentTimeSeries,
+  ThemeDetail,
+  HotspotDetail,
+} from '@/types/widgets';
+import { useWidgetStore } from '@/store/widgetStore';
+
+// Mock data generators (replace with real API calls later)
+function generateMockSentimentScore(): SentimentScore {
+  const value = Math.random() * 100;
+  const trendValue = (Math.random() - 0.5) * 20;
+  let label: SentimentScore['label'];
+
+  if (value >= 75) label = 'Calm';
+  else if (value >= 50) label = 'Mixed';
+  else if (value >= 25) label = 'Tense';
+  else label = 'Critical';
+
+  return {
+    value,
+    trend: trendValue > 0 ? 'up' : trendValue < 0 ? 'down' : 'stable',
+    trendValue: Math.abs(trendValue),
+    label,
+  };
+}
+
+function generateMockThemes(count: number = 10): Theme[] {
+  const themeNames = [
+    'Metro Delays',
+    'Public Safety',
+    'Road Construction',
+    'Community Events',
+    'School Updates',
+    'Housing Issues',
+    'Crime Reports',
+    'Trash Collection',
+    'Parks & Recreation',
+    'Local Businesses',
+  ];
+
+  return themeNames.slice(0, count).map((name, index) => ({
+    id: `theme-${index}`,
+    name,
+    intensity: Math.random() * 100,
+    change: (Math.random() - 0.5) * 50,
+    trend: Math.random() > 0.5 ? 'up' : Math.random() > 0.5 ? 'down' : 'stable',
+    sentimentBreakdown: {
+      positive: Math.random() * 50,
+      neutral: Math.random() * 30 + 10,
+      negative: Math.random() * 40,
+    },
+    postCount: Math.floor(Math.random() * 500) + 50,
+    keywords: ['keyword1', 'keyword2', 'keyword3'],
+    relatedLocations: [`${Math.floor(Math.random() * 8) + 1}`],
+  }));
+}
+
+function generateMockHotspots(count: number = 15): Hotspot[] {
+  const wards = [
+    { id: '1', name: 'Ward 1' },
+    { id: '2', name: 'Ward 2' },
+    { id: '3', name: 'Ward 3' },
+    { id: '4', name: 'Ward 4' },
+    { id: '5', name: 'Ward 5' },
+    { id: '6', name: 'Ward 6' },
+    { id: '7', name: 'Ward 7' },
+    { id: '8', name: 'Ward 8' },
+  ];
+
+  const severities: Hotspot['severity'][] = ['critical', 'high', 'medium', 'low'];
+
+  return Array.from({ length: count }, (_, index) => {
+    const ward = wards[Math.floor(Math.random() * wards.length)];
+    return {
+      id: `hotspot-${index}`,
+      location: {
+        lat: 38.9072 + (Math.random() - 0.5) * 0.1,
+        lng: -77.0369 + (Math.random() - 0.5) * 0.1,
+      },
+      wardId: ward.id,
+      wardName: ward.name,
+      severity: severities[Math.floor(Math.random() * severities.length)],
+      volume: Math.floor(Math.random() * 200) + 20,
+      sentimentScore: (Math.random() - 0.5) * 100,
+      topThemes: ['Metro Delays', 'Public Safety'].slice(0, Math.floor(Math.random() * 2) + 1),
+      recency: Math.floor(Math.random() * 60),
+      isActive: Math.random() > 0.5,
+    };
+  });
+}
+
+function generateMockTimeline(hours: number = 24): SentimentTimeSeries[] {
+  const now = Date.now();
+  return Array.from({ length: hours }, (_, i) => ({
+    timestamp: new Date(now - (hours - i) * 3600000).toISOString(),
+    score: (Math.random() - 0.5) * 100,
+    category: Math.random() > 0.7 ? 'Transit' : Math.random() > 0.5 ? 'Safety' : undefined,
+  }));
+}
+
+// Hook for sentiment data
+export function useSentimentData() {
+  const { timeRange } = useWidgetStore();
+
+  return useQuery({
+    queryKey: ['sentiment', timeRange],
+    queryFn: async () => {
+      // TODO: Replace with actual API call
+      // const data = await api.getSentimentData(timeRange);
+      return {
+        pulse: generateMockSentimentScore(),
+        breakdown: {
+          positive: 45,
+          neutral: 35,
+          negative: 20,
+        },
+        timeline: generateMockTimeline(),
+      };
+    },
+  });
+}
+
+// Hook for themes data
+export function useThemesData() {
+  const { timeRange, themeFilter } = useWidgetStore();
+
+  return useQuery({
+    queryKey: ['themes', timeRange, themeFilter],
+    queryFn: async () => {
+      // TODO: Replace with actual API call
+      // const data = await api.getThemes(timeRange, themeFilter);
+      return {
+        topThemes: generateMockThemes(10),
+        network: undefined, // Optional theme network
+      };
+    },
+  });
+}
+
+// Hook for hotspots data
+export function useHotspotsData() {
+  const { timeRange, sentimentFilter, themeFilter } = useWidgetStore();
+
+  return useQuery({
+    queryKey: ['hotspots', timeRange, sentimentFilter, themeFilter],
+    queryFn: async () => {
+      // TODO: Replace with actual API call
+      // const data = await api.getHotspots(timeRange, sentimentFilter, themeFilter);
+      const hotspots = generateMockHotspots(15);
+      return {
+        hotspots,
+        summary: {
+          total: hotspots.length,
+          critical: hotspots.filter((h) => h.severity === 'critical').length,
+          active: hotspots.filter((h) => h.isActive).length,
+        },
+      };
+    },
+  });
+}
+
+// Hook for theme detail
+export function useThemeDetail(themeId: string | null) {
+  return useQuery({
+    queryKey: ['theme-detail', themeId],
+    queryFn: async () => {
+      if (!themeId) return null;
+      // TODO: Replace with actual API call
+      // const data = await api.getThemeDetail(themeId);
+
+      // Mock data for now
+      const theme = generateMockThemes(1)[0];
+      return {
+        ...theme,
+        summary: 'This theme has been gaining traction in the community over the past few days.',
+        timeline: generateMockTimeline(48),
+        topPosts: [], // Would fetch actual signals
+        relatedThemes: generateMockThemes(3),
+      } as ThemeDetail;
+    },
+    enabled: !!themeId,
+  });
+}
+
+// Hook for hotspot detail
+export function useHotspotDetail(hotspotId: string | null) {
+  return useQuery({
+    queryKey: ['hotspot-detail', hotspotId],
+    queryFn: async () => {
+      if (!hotspotId) return null;
+      // TODO: Replace with actual API call
+      // const data = await api.getHotspotDetail(hotspotId);
+
+      // Mock data for now
+      const hotspot = generateMockHotspots(1)[0];
+      return {
+        ...hotspot,
+        summary:
+          'This area has seen increased activity related to public safety and transportation issues.',
+        themeBreakdown: generateMockThemes(5),
+        timeline: generateMockTimeline(24),
+        recentPosts: [], // Would fetch actual signals
+        suggestedActions: [
+          'Monitor social media for escalating concerns',
+          'Coordinate with local police department',
+          'Review recent 311 service requests',
+        ],
+      } as HotspotDetail;
+    },
+    enabled: !!hotspotId,
+  });
+}
