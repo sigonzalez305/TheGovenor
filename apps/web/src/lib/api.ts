@@ -51,4 +51,27 @@ export const api = {
   // Search
   search: (q: string, type: string = 'all') =>
     fetchAPI<any>(`/search?q=${encodeURIComponent(q)}&type=${type}`),
+
+  // Sentiment
+  getSentimentCitywide: (timeWindow: string = '24h') =>
+    fetchAPI<any>(`/sentiment/citywide?timeWindow=${timeWindow}`),
+  getSentimentWard: (wardId: number, timeWindow: string = '24h') =>
+    fetchAPI<any>(`/sentiment/ward/${wardId}?timeWindow=${timeWindow}`),
+  getSentimentTimeseries: (params: any = {}) => {
+    const query = new URLSearchParams(params).toString();
+    return fetchAPI<any>(`/sentiment/timeseries?${query}`);
+  },
+
+  // Themes
+  getThemes: (timeWindow: string = '24h', limit: number = 10) =>
+    fetchAPI<any>(`/themes?timeWindow=${timeWindow}&limit=${limit}`),
+  getTheme: (id: string) => fetchAPI<any>(`/themes/${id}`),
+  getThemeNetwork: () => fetchAPI<any>('/themes/network'),
+
+  // Hotspots
+  getHotspots: (params: any = {}) => {
+    const query = new URLSearchParams(params).toString();
+    return fetchAPI<any>(`/hotspots?${query}`);
+  },
+  getHotspot: (id: string) => fetchAPI<any>(`/hotspots/${id}`),
 };
